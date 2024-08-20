@@ -142,12 +142,26 @@ namespace Microsoft.Maui.Handlers
 
 				var width = maxResizeFactor * sourceSize.Width;
 				var height = maxResizeFactor * sourceSize.Height;
+
+#if IOS17_0_OR_GREATER
+				var renderer = new UIGraphicsImageRenderer(new CGSize((nfloat)width, (nfloat)height), new UIGraphicsImageRendererFormat()
+				{
+					Opaque = false,
+					Scale = 0,
+				});
+
+				return renderer.CreateImage((context) =>
+				{
+					sourceImage.Draw(new CGRect(0, 0, (nfloat)width, (nfloat)height));
+				});
+#else
 				UIGraphics.BeginImageContextWithOptions(new CGSize((nfloat)width, (nfloat)height), false, 0);
 				sourceImage.Draw(new CGRect(0, 0, (nfloat)width, (nfloat)height));
 				var resultImage = UIGraphics.GetImageFromCurrentImageContext();
 				UIGraphics.EndImageContext();
 
 				return resultImage;
+#endif
 			}
 		}
 

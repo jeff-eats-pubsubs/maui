@@ -176,6 +176,34 @@ namespace Microsoft.Maui.Controls.Compatibility.Platform.iOS
 
 		internal virtual UIImage CreateCheckBox(UIImage check)
 		{
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(new CGSize(_defaultSize, _defaultSize), new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = 0,
+			});
+			return renderer.CreateImage((context) =>
+			{
+				context.CGContext.SaveState();
+
+				var checkedColor = CheckBoxTintUIColor;
+				checkedColor.SetFill();
+				checkedColor.SetStroke();
+				var vPadding = _lineWidth / 2;
+				var hPadding = _lineWidth / 2;
+				var diameter = _defaultSize - _lineWidth;
+				var backgroundRect = new CGRect(hPadding, vPadding, diameter, diameter);
+				var boxPath = CreateBoxPath(backgroundRect);
+				boxPath.LineWidth = _lineWidth;
+				boxPath.Stroke();
+				if (check != null)
+				{
+					boxPath.Fill();
+					check.Draw(new CGPoint(0, 0), CGBlendMode.DestinationOut, 1);
+				}
+				context.CGContext.RestoreState();
+			});
+#else
 			UIGraphics.BeginImageContextWithOptions(new CGSize(_defaultSize, _defaultSize), false, 0);
 			var context = UIGraphics.GetCurrentContext();
 			context.SaveState();
@@ -204,11 +232,34 @@ namespace Microsoft.Maui.Controls.Compatibility.Platform.iOS
 			UIGraphics.EndImageContext();
 
 			return img;
+#endif
 		}
 
 
 		internal UIImage CreateCheckMark()
 		{
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(new CGSize(_defaultSize, _defaultSize), new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = 0,
+			});
+
+			return renderer.CreateImage((context) =>
+			{
+				context.CGContext.SaveState();
+				var vPadding = _lineWidth / 2;
+				var hPadding = _lineWidth / 2;
+				var diameter = _defaultSize - _lineWidth;
+				var checkPath = CreateCheckPath();
+				context.CGContext.TranslateCTM(hPadding + (nfloat)(0.05 * diameter), vPadding + (nfloat)(0.1 * diameter));
+				context.CGContext.ScaleCTM(diameter, diameter);
+				DrawCheckMark(checkPath);
+				UIColor.White.SetStroke();
+				checkPath.Stroke();
+				context.CGContext.RestoreState();
+			});
+#else
 			UIGraphics.BeginImageContextWithOptions(new CGSize(_defaultSize, _defaultSize), false, 0);
 			var context = UIGraphics.GetCurrentContext();
 			context.SaveState();
@@ -230,6 +281,7 @@ namespace Microsoft.Maui.Controls.Compatibility.Platform.iOS
 			UIGraphics.EndImageContext();
 
 			return img;
+#endif
 		}
 
 		protected override void Dispose(bool disposing)

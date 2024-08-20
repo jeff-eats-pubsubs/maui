@@ -56,6 +56,20 @@ namespace Microsoft.Maui.DeviceTests
 		{
 			var rect = new CGRect(0, 0, width, height);
 
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(rect, new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = 1,
+			});
+
+			return renderer.CreateImage((context) =>
+			{
+				color.SetFill();
+				context.FillRect(rect);
+			}).ImageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal);
+#else
+
 			UIGraphics.BeginImageContextWithOptions(rect.Size, false, 1);
 			var context = UIGraphics.GetCurrentContext();
 
@@ -67,6 +81,7 @@ namespace Microsoft.Maui.DeviceTests
 			UIGraphics.EndImageContext();
 
 			return image.ImageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal);
+#endif
 		}
 	}
 }

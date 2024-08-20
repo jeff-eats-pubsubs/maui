@@ -22,6 +22,19 @@ namespace Microsoft.Maui.DeviceTests.Stubs
 
 			var rect = new CGRect(0, 0, 100, 100);
 
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(rect.Size, new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = 1,
+			});
+
+			var image = renderer.CreateImage((context) =>
+			{
+				color.ToPlatform().SetFill();
+				context.FillRect(rect);
+			}).ImageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal);
+#else
 			UIGraphics.BeginImageContextWithOptions(rect.Size, false, 1);
 			var context = UIGraphics.GetCurrentContext();
 
@@ -37,6 +50,7 @@ namespace Microsoft.Maui.DeviceTests.Stubs
 			_cache[color] = (image, 1);
 
 			return image;
+#endif
 		}
 
 		public void Return(Color color)

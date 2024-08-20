@@ -121,6 +121,15 @@ namespace Microsoft.Maui.Controls.Platform
 			if (backgroundLayer == null)
 				return null;
 
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(backgroundLayer.Bounds.Size, new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = UIScreen.MainScreen.Scale,
+			});
+
+			return renderer.CreateImage((context) => backgroundLayer.RenderInContext(context.CGContext));
+#else
 			UIGraphics.BeginImageContextWithOptions(backgroundLayer.Bounds.Size, false, UIScreen.MainScreen.Scale);
 
 			if (UIGraphics.GetCurrentContext() == null)
@@ -131,6 +140,7 @@ namespace Microsoft.Maui.Controls.Platform
 			UIGraphics.EndImageContext();
 
 			return gradientImage;
+#endif
 		}
 
 		public static void InsertBackgroundLayer(this UIView view, CALayer backgroundLayer, int index = -1)

@@ -449,6 +449,29 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 
 			var rect = new CGRect(0, 0, 23f, 23f);
 
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(rect.Size, new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = 0,
+			});
+
+			img = renderer.CreateImage((context) =>
+			{
+				context.CGContext.SaveState();
+				UIColor.Blue.SetStroke();
+				float size = 3f;
+				float start = 4f;
+				context.CGContext.SetLineWidth(size);
+				for (int i = 0; i < 3; i++)
+				{
+					context.CGContext.MoveTo(1f, start + i * (size * 2));
+					context.CGContext.AddLineToPoint(22f, start + i * (size * 2));
+					context.CGContext.StrokePath();
+				}
+				context.CGContext.RestoreState();
+			});
+#else
 			UIGraphics.BeginImageContextWithOptions(rect.Size, false, 0);
 			var ctx = UIGraphics.GetCurrentContext();
 			ctx.SaveState();
@@ -468,6 +491,7 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 			ctx.RestoreState();
 			img = UIGraphics.GetImageFromCurrentImageContext();
 			UIGraphics.EndImageContext();
+#endif
 
 			_nSCache.SetObjectforKey(img, (NSString)hamburgerKey);
 			return img;

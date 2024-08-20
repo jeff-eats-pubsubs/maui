@@ -47,10 +47,23 @@ namespace Microsoft.Maui.Graphics.Platform
 				return target;
 			}
 
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(target.Size, new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = target.CurrentScale,
+			});
+
+			var image = renderer.CreateImage((context) =>
+			{
+				target.Draw(CGPoint.Empty);
+			});
+#else
 			UIGraphics.BeginImageContextWithOptions(target.Size, false, target.CurrentScale);
 			target.Draw(CGPoint.Empty);
 			var image = UIGraphics.GetImageFromCurrentImageContext();
 			UIGraphics.EndImageContext();
+#endif
 
 			if (disposeOriginal)
 			{

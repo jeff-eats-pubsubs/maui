@@ -76,12 +76,28 @@ namespace Microsoft.Maui.DeviceTests.ImageAnalysis
 			var scale = UIScreen.MainScreen.Scale;
 			int width = (int)(rect.Width * scale);
 			int height = (int)(rect.Height * scale);
+
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(rect.Size, new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = UIScreen.MainScreen.Scale,
+			});
+
+			using var image = renderer.CreateImage((context) =>
+			{
+				using var colorSpace = CGColorSpace.CreateDeviceRGB();
+				view.Layer.RenderInContext(context.CGContext);
+			});
+#else
 			UIGraphics.BeginImageContextWithOptions(rect.Size, false, UIScreen.MainScreen.Scale);
 			using var context = UIGraphics.GetCurrentContext();
 			using var colorSpace = CGColorSpace.CreateDeviceRGB();
 			view.Layer.RenderInContext(context);
 			using var image = UIGraphics.GetImageFromCurrentImageContext();
 			UIGraphics.EndImageContext();
+#endif
+
 			var cgimage = image.CGImage;
 			var buffer = cgimage.DataProvider.CopyData();
 			var pixelBuffer = buffer.ToArray();
@@ -110,7 +126,7 @@ namespace Microsoft.Maui.DeviceTests.ImageAnalysis
 				Density = scale
 			};
 		}
-#elif ANDROID
+#elif ANDROID        
 		private static async Task<RawBitmap> CaptureView(Android.Views.View view)
 		{
 			while (!AndroidX.Core.View.ViewCompat.IsLaidOut(view))
@@ -171,5 +187,5 @@ namespace Microsoft.Maui.DeviceTests.ImageAnalysis
 			}
 		}*/
 #endif
-	}
+		}
 }

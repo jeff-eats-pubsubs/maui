@@ -32,6 +32,26 @@ namespace Microsoft.Maui.Media
 			_ = window ?? throw new ArgumentNullException(nameof(window));
 
 			// NOTE: We rely on the window frame having been set to the correct size when this method is invoked.
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(window.Bounds.Size, new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = window.Screen.Scale,
+			});
+
+			// renderer will be null if the width/height of the view is zero
+			if (renderer is not null && !TryRender(window, out _))
+			{
+				// TODO: test/handle this case
+			}
+
+			var image = renderer?.CreateImage((_) =>
+			{
+				window.DrawViewHierarchy(window.Bounds, true);
+			});
+
+			var result = new ScreenshotResult(image ?? new UIImage());
+#else
 			UIGraphics.BeginImageContextWithOptions(window.Bounds.Size, false, window.Screen.Scale);
 			var ctx = UIGraphics.GetCurrentContext();
 
@@ -45,6 +65,7 @@ namespace Microsoft.Maui.Media
 			UIGraphics.EndImageContext();
 
 			var result = new ScreenshotResult(image);
+#endif
 
 			return Task.FromResult<IScreenshotResult>(result);
 		}
@@ -54,6 +75,24 @@ namespace Microsoft.Maui.Media
 			_ = view ?? throw new ArgumentNullException(nameof(view));
 
 			// NOTE: We rely on the view frame having been set to the correct size when this method is invoked.
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(view.Bounds.Size, new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = view.Window.Screen.Scale,
+			});
+
+			// renderer will be null if the width/height of the view is zero
+			if (renderer is not null && !TryRender(view, out _))
+			{
+				// TODO: test/handle this case
+			}
+
+			var image = renderer?.CreateImage((_) =>
+			{
+				view.DrawViewHierarchy(view.Bounds, true);
+			});
+#else
 			UIGraphics.BeginImageContextWithOptions(view.Bounds.Size, false, view.Window.Screen.Scale);
 			var ctx = UIGraphics.GetCurrentContext();
 
@@ -66,6 +105,7 @@ namespace Microsoft.Maui.Media
 			var image = UIGraphics.GetImageFromCurrentImageContext();
 			UIGraphics.EndImageContext();
 
+#endif
 			var result = image is null ? null : new ScreenshotResult(image);
 
 			return Task.FromResult<IScreenshotResult?>(result);
@@ -76,6 +116,28 @@ namespace Microsoft.Maui.Media
 			_ = layer ?? throw new ArgumentNullException(nameof(layer));
 
 			// NOTE: We rely on the layer frame having been set to the correct size when this method is invoked.
+#if IOS17_0_OR_GREATER
+			var renderer = new UIGraphicsImageRenderer(layer.Bounds.Size, new UIGraphicsImageRendererFormat()
+			{
+				Opaque = false,
+				Scale = layer.RasterizationScale,
+			});
+
+			// renderer will be null if the width/height of the view is zero
+			if (renderer is not null)
+			{
+				// TODO: test/handle this case
+			}
+
+			var image = renderer?.CreateImage((context) =>
+			{
+				if (!TryRender(layer, context.CGContext, skipChildren, out _))
+				{
+					// TODO: test/handle this case
+				}
+				layer.RenderInContext(context.CGContext);
+			});
+#else
 			UIGraphics.BeginImageContextWithOptions(layer.Bounds.Size, false, layer.RasterizationScale);
 			var ctx = UIGraphics.GetCurrentContext();
 
@@ -87,6 +149,7 @@ namespace Microsoft.Maui.Media
 
 			var image = UIGraphics.GetImageFromCurrentImageContext();
 			UIGraphics.EndImageContext();
+#endif
 
 			var result = image is null ? null : new ScreenshotResult(image);
 
